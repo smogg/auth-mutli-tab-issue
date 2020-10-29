@@ -2,10 +2,10 @@
 const a0config = {
   client_id: 'wlx24OQ9PHj02m0nt422ALThAcbFhICa',
   domain: 'pitch-app-playground.eu.auth0.com',
-  // audience: 'document-sync-1',
+  audience: 'document-sync-1',
   redirect_uri: 'http://localhost:8080',
   cacheLocation: 'localstorage',
-  userRefreshTokens: true
+  useRefreshTokens: true
 }
 
 const a0 = new Auth0Client(a0config);
@@ -28,11 +28,7 @@ function login() {
 }
 
 function getToken() {
-
-  return a0.isAuthenticated()
-    .then(() => {
-      return a0.getTokenSilently().catch((err) => console.error("couldn't get token", err))
-     })
+  return a0.getTokenSilently().catch((err) => console.error("couldn't get token", err))
 }
 
 // Demo UI
@@ -66,7 +62,7 @@ function start() {
 }
 
 function expireToken() {
-  const k = "@@auth0spajs@@::wlx24OQ9PHj02m0nt422ALThAcbFhICa::default::openid profile email";
+  const k = "@@auth0spajs@@::wlx24OQ9PHj02m0nt422ALThAcbFhICa::document-sync-1::openid profile email offline_access";
   const json = localStorage.getItem(k)
   if (json){
     const tokens = JSON.parse(json)
@@ -80,7 +76,3 @@ document.querySelector("#stop").addEventListener('click', stop)
 document.querySelector("#expire").addEventListener('click', expireToken)
 
 expireToken()
-for (let i = 0; i < 500; i++) {
-
-  getToken()
-}
