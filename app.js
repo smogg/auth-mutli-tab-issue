@@ -27,8 +27,14 @@ function login() {
     })
 }
 
+
+let promise;
 function getToken() {
-  return a0.getTokenSilently().catch((err) => console.error("couldn't get token", err))
+  if (promise) return promise;
+  promise = a0.getTokenSilently().catch((err) => console.error("couldn't get token", err)).finally(() => {
+    promise = null;
+  })
+  return promise;
 }
 
 // Demo UI
