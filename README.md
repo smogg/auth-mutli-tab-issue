@@ -1,6 +1,6 @@
 ### Summary
 Due to the nature of the application we are building, our users are peforming a lot of authorized requests when the app is initialized. Previously, we thought the problems is caused by multiple-tab usage (see `master` branch). We no longer think that's the case and we can reproduce the problem with just a single tab.
-We are using Auth0 SPA SDK v1.12.1 with the settings you can view here: https://github.com/smogg/auth-mutli-tab-issue/blob/07f6059eab4374d02622853afaf56edf2e102343/app.js#L2-L9
+We are using Auth0 SPA SDK v1.12.1 with the settings you can view here: https://github.com/smogg/auth-mutli-tab-issue/blob/single-tab/app.js#L2-L9
 Notably, we use Refresh Token Rotation with localStorage as cache location.
 
 ### The problem
