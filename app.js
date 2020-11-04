@@ -27,8 +27,10 @@ function login() {
     })
 }
 
+const lock = new supertokenslock.getNewInstance()
+
 function getToken() {
-  return a0.getTokenSilently().catch((err) => console.error("couldn't get token", err))
+  return a0.getTokenSilently()
 }
 
 // Demo UI
@@ -44,23 +46,6 @@ function displayToken(token) {
 login()
   .then(displayUser)
 
-// ********
-// THE LOOP
-// ********
-let interval;
-
-function stop() {
-  interval && clearInterval(interval)
-}
-
-function start() {
-  stop()
-  interval = setInterval(
-    function () { getToken().then(displayToken) },
-    50
-  )
-}
-
 function expireToken() {
   const k = "@@auth0spajs@@::wlx24OQ9PHj02m0nt422ALThAcbFhICa::document-sync-1::openid profile email offline_access";
   const json = localStorage.getItem(k)
@@ -71,8 +56,51 @@ function expireToken() {
   }
 }
 
-document.querySelector("#start").addEventListener('click', start)
-document.querySelector("#stop").addEventListener('click', stop)
-document.querySelector("#expire").addEventListener('click', expireToken)
+function sleep(ms) {
+  return function (x) {
+    return new Promise(resolve => setTimeout(() => resolve(x), ms));
+  };
+}
 
-expireToken()
+function jitter(p) {
+  // We perform real network requests, so this function is meant to mimic
+  // the random delay those might cause
+  return Promise.resolve()
+    .then(sleep(1000 * Math.random()))
+    .then(p)
+}
+
+let counter = 1;
+function mimicInitializationLogic() {
+  // expire token to mimic opening a new tab after a while
+  expireToken()
+
+  // on every app init we populate our app's state with the user data, only once
+  jitter(() => a0.isAuthenticated())
+    .then(() => {
+      console.log("getUser")
+      a0.getUser()
+      a0.getIdTokenClaims()
+    })
+
+  // in different places throughout the app we do two things:
+  // the number "30" is not random here - that's the actual number of how many times
+  // we might call the Auth0 API functions when a user opens a new tab
+  for (let i = 0; i < 30; i++) {
+    // - we get the token and talk to our servers
+    jitter(() => {
+      console.log("getTokenSilently")
+      a0.getTokenSilently()
+    })
+    // - we check if user is authenticated to make decisions in different parts of the application
+    jitter(() => {
+      console.log("isAuthenticated")
+      a0.isAuthenticated()
+    })
+  }
+
+  console.log("-----", counter, "-----")
+  counter++;
+}
+
+document.querySelector("#hundred").addEventListener('click', mimicInitializationLogic)
