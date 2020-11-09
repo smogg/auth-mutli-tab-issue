@@ -27,8 +27,6 @@ function login() {
     })
 }
 
-const lock = new supertokenslock.getNewInstance()
-
 function getToken() {
   return a0.getTokenSilently()
 }
@@ -47,7 +45,7 @@ login()
   .then(displayUser)
 
 function expireToken() {
-  const k = "@@auth0spajs@@::wlx24OQ9PHj02m0nt422ALThAcbFhICa::document-sync-1::openid profile email offline_access";
+  const k = `@@auth0spajs@@::${a0config.client_id}::${a0config.audience}::openid profile email offline_access`;
   const json = localStorage.getItem(k)
   if (json){
     const tokens = JSON.parse(json)
