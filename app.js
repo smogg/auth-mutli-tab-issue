@@ -27,8 +27,14 @@ function login() {
     })
 }
 
-function getToken() {
-  return a0.getTokenSilently().catch((err) => console.error("couldn't get token", err))
+function expireToken() {
+  const k = `@@auth0spajs@@::${a0config.client_id}::${a0config.audience}::openid profile email offline_access`;
+  const json = localStorage.getItem(k)
+  if (json) {
+    const tokens = JSON.parse(json)
+    tokens.expiresAt = 1;
+    localStorage.setItem(k, JSON.stringify(tokens))
+  }
 }
 
 // Demo UI
@@ -40,39 +46,21 @@ function displayToken(token) {
   document.querySelector("#token").innerText = token
 }
 
-// Init logic
 login()
   .then(displayUser)
 
-// ********
-// THE LOOP
-// ********
-let interval;
-
-function stop() {
-  interval && clearInterval(interval)
+// expires the token exery 10 seconds. Usually, this would happen only every 2 hours
+// as that's the token lifetime we have set in production.
+// This function should only be fired in a single tab to be realistic.
+function startExpiringToken() {
+  setInterval(() => {
+    expireToken()
+  }, 10000)
 }
 
-function start() {
-  stop()
-  interval = setInterval(
-    function () { getToken().then(displayToken) },
-    50
-  )
-}
+// start requesting a new token every second
+setInterval(() => {
+  a0.getTokenSilently()
+}, 1000)
 
-function expireToken() {
-  const k = "@@auth0spajs@@::wlx24OQ9PHj02m0nt422ALThAcbFhICa::document-sync-1::openid profile email offline_access";
-  const json = localStorage.getItem(k)
-  if (json){
-    const tokens = JSON.parse(json)
-    tokens.expiresAt = 1;
-    localStorage.setItem(k, JSON.stringify(tokens))
-  }
-}
-
-document.querySelector("#start").addEventListener('click', start)
-document.querySelector("#stop").addEventListener('click', stop)
-document.querySelector("#expire").addEventListener('click', expireToken)
-
-expireToken()
+document.querySelector("#expire").addEventListener('click', startExpiringToken)
