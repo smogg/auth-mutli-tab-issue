@@ -16,13 +16,16 @@ function uuidv4() {
   );
 }
 
-
-function LamportMutex(id) {
+function lamportMutex(id) {
     const X = '_lock-X',
           Y = '_lock-Y';
 
-    let set = (k, v) => localStorage.setItem(k, v);
-    let get = (k) => localStorage.getItem(k);
+    const set = (k, v) => localStorage.setItem(k, v),
+          get = (k) => localStorage.getItem(k),
+          isFree = (k) => {
+              let v = get(k);
+              return v === undefined || v === null;
+          };
 
     return {
         acquire: function() {
@@ -37,13 +40,7 @@ function LamportMutex(id) {
                     this.lock(retries + 1).then(resolve, reject);
                 });
             };
-            const isFree = (v) => {
-                const val = get(v);
-                return val === undefined || val === null;
-            };
-
             set(X, id);
-
             return new Promise((resolve, reject) => {
                 if (isFree(Y) || retries > 10) {
                     set(Y, id);
@@ -118,13 +115,13 @@ function startExpiringToken() {
   }, 10000);
 }
 
-var mtx = LamportMutex(uuidv4());
+const mtx = lamportMutex(uuidv4());
 
 // start requesting a new token every second
-setInterval(() => { mtx.acquire().then(
+setInterval(() => {mtx.acquire().then(
     () => {
         console.log('getTokenSilently');
-        a0.getTokenSilently().then((t) => mtx.release());
+        a0.getTokenSilently({timeoutInSeconds: 5}).then((t) => mtx.release());
     });
 }, 500);
 
